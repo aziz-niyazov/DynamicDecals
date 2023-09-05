@@ -12,6 +12,8 @@
 #include "qwidgetmyicon.h"
 
 
+bool isToggleButton = true;
+
 
 QWidgetMyWidget::QWidgetMyWidget () : timerSet(0), QWidget () {
 
@@ -33,43 +35,14 @@ void setButtonIcon(QPushButton *button, QIcon icon){
     button->setStyleSheet("border-radius: 10px;");
 }
 
-void QWidgetMyWidget::setUiPointer(Ui::MainWindow* ui) {
-    uiPointer = ui;
 
-    IconReleasedButton = QIcon("C:/Users/aniyazov/Pictures/interactive_decal_interface/buttonGrey.png");
-    IconPressedButton1 = QIcon("C:/Users/aniyazov/Pictures/interactive_decal_interface/Asset 17");
-    IconPressedButton2 = QIcon("C:/Users/aniyazov/Pictures/interactive_decal_interface/Asset 17");
-    IconPressedButton3 = QIcon("C:/Users/aniyazov/Pictures/interactive_decal_interface/Asset 17");
-    IconPressedButton4 = QIcon("C:/Users/aniyazov/Pictures/interactive_decal_interface/Asset 17");
-
-
-    setButtonIcon(ui->pushButton_1, IconReleasedButton);
-    setButtonIcon(ui->pushButton_2, IconReleasedButton);
-    setButtonIcon(ui->pushButton_3, IconReleasedButton);
-    setButtonIcon(ui->pushButton_4, IconReleasedButton);
-
-
-
-    // Connect button signals to respective slots using uiPointer
-    connect(ui->pushButton_1, &QPushButton::pressed, this, &QWidgetMyWidget::handleButton1Pressed);
-    connect(ui->pushButton_2, &QPushButton::pressed, this, &QWidgetMyWidget::handleButton2Pressed);
-    connect(ui->pushButton_3, &QPushButton::pressed, this, &QWidgetMyWidget::handleButton3Pressed);
-    connect(ui->pushButton_4, &QPushButton::pressed, this, &QWidgetMyWidget::handleButton4Pressed);
-
-    connect(ui->pushButton_1, &QPushButton::released, this, &QWidgetMyWidget::handleButton1Released);
-    connect(ui->pushButton_2, &QPushButton::released, this, &QWidgetMyWidget::handleButton2Released);
-    connect(ui->pushButton_3, &QPushButton::released, this, &QWidgetMyWidget::handleButton3Released);
-    connect(ui->pushButton_4, &QPushButton::released, this, &QWidgetMyWidget::handleButton4Released);
-
-
-
-}
 
 void QWidgetMyWidget::setDecoration(Ui::MainWindow *ui)
 {
      uiPointer = ui;
 
-     QString backgroundImagePath = "C:/Users/aniyazov/Pictures/interactive_decal_interface/Asset 23"; // Replace with the path to your image file
+//     QString backgroundImagePath = "C:/Users/aniyazov/Pictures/interactive_decal_interface/Asset 23"; // Replace with the path to your image file
+     QString backgroundImagePath = "C:/Users/aniyazov/Pictures/interactive_decal_interface/demo-constraints-avengers-04"; // Replace with the path to your image file
      QString stylesheet = QString("background-image: url('%1');").arg(backgroundImagePath);
      uiPointer->background_2->setStyleSheet(stylesheet);
      uiPointer->background_2->setAttribute(Qt::WA_TransparentForMouseEvents);
@@ -126,68 +99,102 @@ void QWidgetMyWidget::addButtons()
         }
 
 
-
-
-
-
-
         auto x = 1770;
        // auto x = 0;
        // auto y = 342 + (i*107);
         auto y = 300 + (i*107);
         icon->setGeometry(x, y, icon->width(), icon->height());
 
+        //  Connect to signals
+        if(!isToggleButton){
+            connect(icon, &QWidgetMyIcon::iconPressed, this, [=]() {
+                qDebug() << "Mouse pressed on myIcon" << i;
+                innerRemoveColorDecale();
 
-    //  Connect to signals
-        connect(icon, &QWidgetMyIcon::iconPressed, this, [=]() {
-            qDebug() << "Mouse pressed on myIcon" << i;
-            innerRemoveColorDecale();
+                if (i == 0){
+                    icon->changeIconPixmap(PixmapPressedButtonYellow);
+                    MyDecalSolver::switchGamutConstraint = true;
+                }
+                else if (i == 1){
+                    icon->changeIconPixmap(PixmapPressedButtonGreen);
+                    MyDecalSolver::switchMinDistConstraint = true;
+                }
+                else if (i == 2){
+                    icon->changeIconPixmap(PixmapPressedButtonBlue);
+                    MyDecalSolver::switchMaxDistConstraint = true;
+                }
+                else if (i == 3){
+                    icon->changeIconPixmap(PixmapPressedButtonViolet);
+                    MyDecalSolver::switchAlignConstraint = true;
+                }
+                internal_solver_init();
+                needUpdate = true;
+            });
 
-            if (i == 0){
-                icon->changeIconPixmap(PixmapPressedButtonYellow);
-                MyDecalSolver::switchGamutConstraint = true;
-            }
-            else if (i == 1){
-                icon->changeIconPixmap(PixmapPressedButtonGreen);
-                MyDecalSolver::switchMinDistConstraint = true;
-            }
-            else if (i == 2){
-                icon->changeIconPixmap(PixmapPressedButtonBlue);
-                MyDecalSolver::switchMaxDistConstraint = true;
-            }
-            else if (i == 3){
-                icon->changeIconPixmap(PixmapPressedButtonViolet);
-                MyDecalSolver::switchAlignConstraint = true;
-            }
-            internal_solver_init();
-            needUpdate = true;
-        });
+            connect(icon, &QWidgetMyIcon::iconReleased, this, [=]() {
+                qDebug() << "Mouse released on myIcon" <<i;
+                if (i == 0){
+                    icon->changeIconPixmap(PixmapReleasedButtonYellow);
+                    MyDecalSolver::switchGamutConstraint = false;
+                }
+                else if (i == 1){
+                    icon->changeIconPixmap(PixmapReleasedButtonGreen);
+                    MyDecalSolver::switchMinDistConstraint = false;
+                }
+                else if (i == 2){
+                    icon->changeIconPixmap(PixmapReleasedButtonBlue);
+                    MyDecalSolver::switchMaxDistConstraint = false;
+                }
+                else if (i == 3){
+                    icon->changeIconPixmap(PixmapReleasedButtonViolet);
+                    MyDecalSolver::switchAlignConstraint = false;
+                }
+    //            //set grey icon
+    //            icon->changeIconPixmap(PixmapReleased);
+                internal_solver_init();
 
-        connect(icon, &QWidgetMyIcon::iconReleased, this, [=]() {
-            qDebug() << "Mouse released on myIcon" <<i;
-            if (i == 0){
-                icon->changeIconPixmap(PixmapReleasedButtonYellow);
-                MyDecalSolver::switchGamutConstraint = false;
-            }
-            else if (i == 1){
-                icon->changeIconPixmap(PixmapReleasedButtonGreen);
-                MyDecalSolver::switchMinDistConstraint = false;
-            }
-            else if (i == 2){
-                icon->changeIconPixmap(PixmapReleasedButtonBlue);
-                MyDecalSolver::switchMaxDistConstraint = false;
-            }
-            else if (i == 3){
-                icon->changeIconPixmap(PixmapReleasedButtonViolet);
-                MyDecalSolver::switchAlignConstraint = false;
-            }
-//            //set grey icon
-//            icon->changeIconPixmap(PixmapReleased);
-            internal_solver_init();
+                needUpdate = true;
 
-            needUpdate = true;
+            });
+        }else{
+            connect(icon, &QWidgetMyIcon::iconPressed, this, [=]() {
+                qDebug() << "Only touch pressed on myIcon" << i;
+                innerRemoveColorDecale();
 
-        });
+                if (i == 0){
+                    MyDecalSolver::switchGamutConstraint = !MyDecalSolver::switchGamutConstraint;
+                    if(MyDecalSolver::switchGamutConstraint)
+                        icon->changeIconPixmap(PixmapPressedButtonYellow);
+                    else
+                        icon->changeIconPixmap(PixmapReleasedButtonYellow);
+                }
+                else if (i == 1){
+                    MyDecalSolver::switchMinDistConstraint = !MyDecalSolver::switchMinDistConstraint;
+                    if(MyDecalSolver::switchMinDistConstraint)
+                        icon->changeIconPixmap(PixmapPressedButtonGreen);
+                    else
+                        icon->changeIconPixmap(PixmapReleasedButtonGreen);
+                }
+                else if (i == 2){
+                    MyDecalSolver::switchMaxDistConstraint = !MyDecalSolver::switchMaxDistConstraint;
+                    if(MyDecalSolver::switchMaxDistConstraint)
+                        icon->changeIconPixmap(PixmapPressedButtonBlue);
+                    else
+                        icon->changeIconPixmap(PixmapReleasedButtonBlue);
+                }
+                else if (i == 3){
+                    MyDecalSolver::switchAlignConstraint = !MyDecalSolver::switchAlignConstraint;
+                    if(MyDecalSolver::switchAlignConstraint)
+                        icon->changeIconPixmap(PixmapPressedButtonViolet);
+                    else
+                        icon->changeIconPixmap(PixmapReleasedButtonViolet);
+                }
+                internal_solver_init();
+                needUpdate = true;
+            });
+        }
+
+
     }
 
 
@@ -260,51 +267,6 @@ void QWidgetMyWidget::handleButton4Clicked() {
     qDebug() << "Button Alignement Clicked!";
     internal_solver_init();
     // Add your custom code here
-}
-
-//button pressed
-
-void QWidgetMyWidget::handleButton1Pressed()
-{
-    uiPointer->pushButton_1->setIcon(IconPressedButton1);
-    MyDecalSolver::switchGamutConstraint = true;
-    qDebug() << "Button Gamut Clicked!" << MyDecalSolver::switchGamutConstraint;
-    internal_solver_init();
-
-}
-void QWidgetMyWidget::handleButton2Pressed()
-{
-    uiPointer->pushButton_2->setIcon(IconPressedButton2);
-}
-void QWidgetMyWidget::handleButton3Pressed()
-{
-    uiPointer->pushButton_3->setIcon(IconPressedButton3);
-}
-
-void QWidgetMyWidget::handleButton4Pressed()
-{
-    uiPointer->pushButton_4->setIcon(IconPressedButton4);
-}
-
-//button released
-void QWidgetMyWidget::handleButton1Released()
-{
-    uiPointer->pushButton_1->setIcon(IconReleasedButton);
-    MyDecalSolver::switchGamutConstraint = false;
-    qDebug() << "Button Gamut Clicked!" << MyDecalSolver::switchGamutConstraint;
-    internal_solver_init();
-}
-void QWidgetMyWidget::handleButton2Released()
-{
-    uiPointer->pushButton_2->setIcon(IconReleasedButton);
-}
-void QWidgetMyWidget::handleButton3Released()
-{
-    uiPointer->pushButton_3->setIcon(IconReleasedButton);
-}
-void QWidgetMyWidget::handleButton4Released()
-{
-    uiPointer->pushButton_4->setIcon(IconReleasedButton);
 }
 
 

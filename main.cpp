@@ -27,7 +27,7 @@
 #include <math.h>
 #include "Field2D/imagefield.h"
 #include "Solver/mydecalsolver.h"
-
+#include <QSerialPort>
 
 
 
@@ -100,7 +100,8 @@ void buildFields (){
     ***********************************/
     //Field2D *gamutSDF = new Operator2DMax(gamutComponentFields);
 
-    QString path = "C:/Users/aniyazov/Pictures/interactive_decal_interface/Asset 68";
+   // QString path = "C:/Users/aniyazov/Pictures/interactive_decal_interface/Asset 68";
+    QString path = "C:/Users/aniyazov/Pictures/interactive_decal_interface/demo-constraints-avengers-05";
     Field2D *gamutSDF = new ImageField(path);
 
 
@@ -258,6 +259,10 @@ void buildFields (){
 
     fields.push_back(new DecaleDiskField2D(290., 650., decaleSize1, n));
     decaleImages.push_back(new ColorImage ("C:/Users/aniyazov/Pictures/interactive_decal_interface/avengers_demo/100w/decals (7)"));
+
+    fields.push_back(new DecaleDiskField2D(500., 620., decaleSize1, n));
+    decaleImages.push_back(new ColorImage ("C:/Users/aniyazov/Pictures/interactive_decal_interface/avengers_demo/100w/decals (8)"));
+
 
     /***********************************
     // Pre-compute the field values of each Decale in a buffer

@@ -77,7 +77,6 @@ bool QWidgetMyIcon::event(QEvent *event){
 
     if (event->type() == QEvent::TouchBegin)
     {
-
         emit iconPressed();
         return true;
     }

@@ -17,7 +17,6 @@ class QWidgetMyWidget : public QWidget {
 public:
 
     QWidgetMyWidget();
-    void setUiPointer(Ui::MainWindow* ui);
     void setDecoration(Ui::MainWindow* ui);
     Ui::MainWindow* uiPointer; // Member variable to store the ui pointer
 
@@ -54,15 +53,7 @@ public slots:
     void handleButton3Clicked();
     void handleButton4Clicked();
 
-    void handleButton1Pressed();
-    void handleButton2Pressed();
-    void handleButton3Pressed();
-    void handleButton4Pressed();
 
-    void handleButton1Released();
-    void handleButton2Released();
-    void handleButton3Released();
-    void handleButton4Released();
 
 
 };

@@ -27,14 +27,16 @@ set(SOURCE_FILES main.cpp Decale/DecaleScalarField2D.h Decale/DecaleScalarField2
     Solver/scene.h mainwindow.ui mainwindow.h mainwindow.cpp GUI-Decale/QWidgetMyIcon.h GUI-Decale/QWidgetMyIcon.cpp)
 
 #set(Qt6_DIR "/Users/lbarthe/Developper/Qt5-9/5.9.2/clang_64/lib/cmake/QT5")
-set(Qt6_DIR "C:/Qt/6.0.3/mingw81_64/lib/cmake/Qt6")
+#set(Qt6_DIR "C:/Qt/6.0.3/mingw81_64/lib/cmake/Qt6")
+set(Qt6_DIR "C:/Qt/6.5.2/mingw81_64/lib/cmake/Qt6")
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON) # Enable automatic UIC (UI compiler)
 
 #find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
-find_package(Qt6 COMPONENTS Core Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Core Widgets SerialPort REQUIRED)
 find_package(pse REQUIRED)
+
 
 add_executable(Test ${SOURCE_FILES}
     main.cpp
@@ -46,6 +48,4 @@ add_executable(Test ${SOURCE_FILES}
 
 
 #target_link_libraries(Test Qt5::Core Qt5::Widgets)
-target_link_libraries(Test Qt6::Core Qt6::Widgets PSE::pse)
-
-
+target_link_libraries(Test Qt6::Core Qt6::Widgets PSE::pse Qt6::SerialPort)
