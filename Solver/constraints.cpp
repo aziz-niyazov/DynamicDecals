@@ -158,6 +158,11 @@ pse_res_t Constraints::max_dist_constratint(const pse_eval_ctxt_t *eval_ctxt,
     size_t i;
     (void)eval_ctxt;
 
+    std::vector<int> decalIDsG1 = {0, 1, 2, 3, 4, 5};
+    std::vector<int> decalIDsG2 = {6, 7, 8, 9, 10, 11};
+
+    double maxDist = 300;
+
     for(i = 0; i < eval_relshps->count; ++i) {
         const struct pse_eval_relshp_data_t* data = eval_relshps->data[i];
         assert(data->ppoints_count == 2);
@@ -177,22 +182,34 @@ pse_res_t Constraints::max_dist_constratint(const pse_eval_ctxt_t *eval_ctxt,
 
         //double dist = std::max(std::abs(x2-x1), std::abs(y2-y1));//L1 dist
 
-        std::map<pse_ppoint_id_t, DecaleScalarField2D*>::iterator it1;
-        std::map<pse_ppoint_id_t, DecaleScalarField2D*>::iterator it2;
-        it1 = MyDecalSolver::mydecalsmap.find(ppidx1);
-        it2 = MyDecalSolver::mydecalsmap.find(ppidx2);
+//        std::map<pse_ppoint_id_t, DecaleScalarField2D*>::iterator it1;
+//        std::map<pse_ppoint_id_t, DecaleScalarField2D*>::iterator it2;
+//        it1 = MyDecalSolver::mydecalsmap.find(ppidx1);
+//        it2 = MyDecalSolver::mydecalsmap.find(ppidx2);
 
-        int id1 = it1->first;
-        int id2 = it2->first;
+//        int id1 = it1->first;
+//        int id2 = it2->first;
 
-        double maxDist = 200;
+        // Check if both elements are in the vector of IDs to connect.
+        int id1 = static_cast<int>(ppidx1);
+        int id2 = static_cast<int>(ppidx2);
+
+
         double f =  std::max(0.0, dist - maxDist);
 
-        //2 decals relation
-        if( id1 == 0 and id2 == 1)
+        bool isGroup1 = (std::find(decalIDsG1.begin(), decalIDsG1.end(), id1) != decalIDsG1.end() &&
+                         std::find(decalIDsG1.begin(), decalIDsG1.end(), id2) != decalIDsG1.end());
+
+        bool isGroup2 = (std::find(decalIDsG2.begin(), decalIDsG2.end(), id1) != decalIDsG2.end() &&
+                         std::find(decalIDsG2.begin(), decalIDsG2.end(), id2) != decalIDsG2.end());
+
+
+        if (isGroup1 or isGroup2) {
             costs[i] = f;
-        else
+        } else {
             costs[i] = 0;
+        }
+
 
         costs[i] *= costFactor;
     }
@@ -200,6 +217,102 @@ pse_res_t Constraints::max_dist_constratint(const pse_eval_ctxt_t *eval_ctxt,
     return RES_OK;
 }
 
+pse_res_t Constraints::alignment_constratint(const pse_eval_ctxt_t *eval_ctxt,
+                                            const pse_eval_coordinates_t *eval_coords,
+                                            pse_eval_relshps_t *eval_relshps,
+                                            pse_real_t *costs){
+    size_t i;
+    (void)eval_ctxt;
+
+    std::vector<std::vector<int>> decalIDsG1 = {{0, 1, 2}, {3, 4, 5}};
+   // std::vector<std::vector<int>> decalIDsG2 = {{6, 7, 8}, {9, 10, 11}};
+
+
+    for(i = 0; i < eval_relshps->count; ++i) {
+        const struct pse_eval_relshp_data_t* data = eval_relshps->data[i];
+        assert(data->ppoints_count == 2);
+
+        const pse_ppoint_id_t ppidx1 = data->ppoints[0];
+        const pse_ppoint_id_t ppidx2 = data->ppoints[1];
+
+        double f1 = 0.0;
+        double f2 = 0.0;
+
+        // Iterate over groups and check for horizontal alignment within each group.
+        for (const std::vector<int>& group1 : decalIDsG1) {
+            if (std::find(group1.begin(), group1.end(), static_cast<int>(ppidx1)) != group1.end() &&
+                std::find(group1.begin(), group1.end(), static_cast<int>(ppidx2)) != group1.end()) {
+
+                const pse_real_t y1 = eval_coords->coords[ppidx1 * 2 + 1];
+                const pse_real_t y2 = eval_coords->coords[ppidx2 * 2 + 1];
+
+                // Calculate the vertical difference between elements in the same group.
+                double diffY = y1 - y2;
+
+                // Define the cost based on vertical alignment within the group.
+                f1 = std::abs(diffY);
+                break; // Break the loop if alignment is found in a group.
+            }
+        }
+
+//        // Iterate over groups and check for horizontal alignment within each group.
+//        for (const std::vector<int>& group2 : decalIDsG2) {
+//            if (std::find(group2.begin(), group2.end(), static_cast<int>(ppidx1)) != group2.end() &&
+//                std::find(group2.begin(), group2.end(), static_cast<int>(ppidx2)) != group2.end()) {
+
+//                const pse_real_t y1 = eval_coords->coords[ppidx1 * 2 + 1];
+//                const pse_real_t y2 = eval_coords->coords[ppidx2 * 2 + 1];
+
+//                // Calculate the vertical difference between elements in the same group.
+//                double diffY = y1 - y2;
+
+//                // Define the cost based on vertical alignment within the group.
+//                f2 = std::abs(diffY);
+//                break; // Break the loop if alignment is found in a group.
+//            }
+//        }
+
+
+        // Check for vertical alignment between groups.
+        if (f1 == 0.0 &&
+            ((ppidx1 == 0 && ppidx2 == 3) || (ppidx1 == 1 && ppidx2 == 4) || (ppidx1 == 2 && ppidx2 == 5) ||
+             (ppidx2 == 0 && ppidx1 == 3) || (ppidx2 == 1 && ppidx1 == 4) || (ppidx2 == 2 && ppidx1 == 5))) {
+
+            const pse_real_t x1 = eval_coords->coords[ppidx1 * 2 + 0];
+            const pse_real_t x2 = eval_coords->coords[ppidx2 * 2 + 0];
+
+            // Calculate the horizontal difference between vertically aligned elements.
+            double diffX = x1 - x2;
+
+            // Define the cost based on horizontal alignment between groups.
+            f1 = std::abs(diffX);
+
+        }
+
+        costs[i] = f1;
+
+
+//        // Check for vertical alignment between groups.
+//        if (f2 == 0.0 &&
+//            ((ppidx1 == 6 && ppidx2 == 9) || (ppidx1 == 7 && ppidx2 == 10) || (ppidx1 == 8 && ppidx2 == 11) ||
+//             (ppidx2 == 6 && ppidx1 == 9) || (ppidx2 == 7 && ppidx1 == 10) || (ppidx2 == 8 && ppidx1 == 11))) {
+
+//            const pse_real_t x1 = eval_coords->coords[ppidx1 * 2 + 0];
+//            const pse_real_t x2 = eval_coords->coords[ppidx2 * 2 + 0];
+
+//            // Calculate the horizontal difference between vertically aligned elements.
+//            double diffX = x1 - x2;
+
+//            // Define the cost based on horizontal alignment between groups.
+//            f2 = std::abs(diffX);
+//            costs[i] = f2;
+//        }
+
+        costs[i] *= costFactor;
+    }
+
+    return RES_OK;
+}
 
 
 

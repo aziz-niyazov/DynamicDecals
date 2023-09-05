@@ -30,6 +30,11 @@ public:
              const struct pse_eval_coordinates_t* eval_coords,
              struct pse_eval_relshps_t* eval_relshps,
              pse_real_t* costs);
+    static enum pse_res_t alignment_constratint
+            (const struct pse_eval_ctxt_t* eval_ctxt,
+             const struct pse_eval_coordinates_t* eval_coords,
+             struct pse_eval_relshps_t* eval_relshps,
+             pse_real_t* costs);
 protected:
     static bool isInsideTheImage(int i,int j, int w, int h);
 

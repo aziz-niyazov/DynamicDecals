@@ -249,19 +249,31 @@ void buildFields (){
     decaleImages.push_back(new ColorImage ("C:/Users/aniyazov/Pictures/interactive_decal_interface/avengers_demo/100w/decals (3)"));
 
     fields.push_back(new DecaleDiskField2D (410.,200.,decaleSize1, n));
-    decaleImages.push_back(new ColorImage ("C:/Users/aniyazov/Pictures/interactive_decal_interface/avengers_demo/100w/decals (4)"));
-
-    fields.push_back(new DecaleDiskField2D (490.,140.,decaleSize1, n));
-    decaleImages.push_back(new ColorImage ("C:/Users/aniyazov/Pictures/interactive_decal_interface/avengers_demo/100w/decals (5)"));
-
-    fields.push_back(new DecaleDiskField2D(500., 650., decaleSize1, n));
-    decaleImages.push_back(new ColorImage ("C:/Users/aniyazov/Pictures/interactive_decal_interface/avengers_demo/100w/decals (6)"));
-
-    fields.push_back(new DecaleDiskField2D(290., 650., decaleSize1, n));
     decaleImages.push_back(new ColorImage ("C:/Users/aniyazov/Pictures/interactive_decal_interface/avengers_demo/100w/decals (7)"));
 
+    fields.push_back(new DecaleDiskField2D (490.,140.,decaleSize1, n));
+    decaleImages.push_back(new ColorImage ("C:/Users/aniyazov/Pictures/interactive_decal_interface/avengers_demo/100w/decals (10)"));
+
+    fields.push_back(new DecaleDiskField2D(500., 650., decaleSize1, n));
+    decaleImages.push_back(new ColorImage ("C:/Users/aniyazov/Pictures/interactive_decal_interface/avengers_demo/100w/decals (12)"));
+
+    fields.push_back(new DecaleDiskField2D(290., 670., decaleSize1, n));
+    decaleImages.push_back(new ColorImage ("C:/Users/aniyazov/Pictures/interactive_decal_interface/avengers_demo/100w/decals (4)"));
+
     fields.push_back(new DecaleDiskField2D(500., 620., decaleSize1, n));
+    decaleImages.push_back(new ColorImage ("C:/Users/aniyazov/Pictures/interactive_decal_interface/avengers_demo/100w/decals (5)"));
+
+    fields.push_back(new DecaleDiskField2D(600., 640., decaleSize1, n));
+    decaleImages.push_back(new ColorImage ("C:/Users/aniyazov/Pictures/interactive_decal_interface/avengers_demo/100w/decals (6)"));
+
+    fields.push_back(new DecaleDiskField2D(700., 400., decaleSize1, n));
     decaleImages.push_back(new ColorImage ("C:/Users/aniyazov/Pictures/interactive_decal_interface/avengers_demo/100w/decals (8)"));
+
+    fields.push_back(new DecaleDiskField2D(800., 240., decaleSize1, n));
+    decaleImages.push_back(new ColorImage ("C:/Users/aniyazov/Pictures/interactive_decal_interface/avengers_demo/100w/decals (9)"));
+
+    fields.push_back(new DecaleDiskField2D(800., 500., decaleSize1, n));
+    decaleImages.push_back(new ColorImage ("C:/Users/aniyazov/Pictures/interactive_decal_interface/avengers_demo/100w/decals (11)"));
 
 
     /***********************************

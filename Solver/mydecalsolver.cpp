@@ -3,8 +3,8 @@
 #include "constraints.h"
 #include "../GUI-Decale/QWidgetMyDecale.h"
 
-bool MyDecalSolver::switchGamutConstraint = true;
-bool MyDecalSolver::switchMinDistConstraint = true;
+bool MyDecalSolver::switchGamutConstraint = false;
+bool MyDecalSolver::switchMinDistConstraint = false;
 bool MyDecalSolver::switchMaxDistConstraint = false;
 bool MyDecalSolver::switchAlignConstraint = false;
 
@@ -61,6 +61,17 @@ void MyDecalSolver::internal_preupdate_assignconstraints()
         fp.back().expected_pspace = r2_uid;
     }
 
+    //alignment constr
+    if(switchAlignConstraint){
+        alignment_cosntr_ID = fp.size();
+        fp.push_back( PSE_RELSHP_COST_FUNC_PARAMS_NULL);
+        fids.push_back(PSE_RELSHP_COST_FUNC_ID_INVALID_);
+        fp.back().compute = Constraints::alignment_constratint;
+        fp.back().cost_arity_mode = PSE_COST_ARITY_MODE_PER_RELATIONSHIP;
+        fp.back().costs_count = 1;
+        fp.back().expected_pspace = r2_uid;
+    }
+
 }
 
 void MyDecalSolver::internal_preupdate_constraintrelationships(size_t nRelshsps, std::vector< std::array<pse_ppoint_id_t, 2> > pppairs)
@@ -107,6 +118,21 @@ void MyDecalSolver::internal_preupdate_constraintrelationships(size_t nRelshsps,
           rp1[i].cnstrs.funcs = &fids[max_dist_cosntr_ID];
         }
         PSE_CALL(pseConstrainedParameterSpaceRelationshipsAdd(cps,max_dist_cosntr_ID,nRelshsps,rp1.data(),r1ids.data()));
+    }
+
+    //alignment constr
+    if(switchAlignConstraint){
+        std::vector<pse_cpspace_relshp_params_t> rp1(nRelshsps, PSE_CPSPACE_RELSHP_PARAMS_NULL_) ;
+        std::vector<pse_relshp_id_t> r1ids(nRelshsps, PSE_RELSHP_ID_INVALID_) ;
+        for(size_t i = 0; i < nRelshsps; i++) {
+          rp1[i].ppoints_count = 2;
+          rp1[i].ppoints_id = pppairs[i].data();
+          rp1[i].kind = PSE_RELSHP_KIND_INCLUSIVE;
+          rp1[i].cnstrs.funcs_count = 1;
+          rp1[i].cnstrs.ctxts_config = gamut_config;// name is the same, but it is the state
+          rp1[i].cnstrs.funcs = &fids[alignment_cosntr_ID];
+        }
+        PSE_CALL(pseConstrainedParameterSpaceRelationshipsAdd(cps,alignment_cosntr_ID,nRelshsps,rp1.data(),r1ids.data()));
     }
 }
 
