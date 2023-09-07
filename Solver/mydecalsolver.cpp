@@ -8,6 +8,8 @@ bool MyDecalSolver::switchMinDistConstraint = false;
 bool MyDecalSolver::switchMaxDistConstraint = false;
 bool MyDecalSolver::switchAlignConstraint = false;
 
+int pressedDecalId = -1;
+
 MyDecalSolver::MyDecalSolver() :  GenericSolver(){
     std::cout<<"mysolver: constructor"<<std::endl;
 
@@ -63,11 +65,19 @@ void MyDecalSolver::internal_preupdate_assignconstraints()
 
     //alignment constr
     if(switchAlignConstraint){
-        alignment_cosntr_ID = fp.size();
+        alignmentX_cosntr_ID = fp.size();
         fp.push_back( PSE_RELSHP_COST_FUNC_PARAMS_NULL);
         fids.push_back(PSE_RELSHP_COST_FUNC_ID_INVALID_);
-        fp.back().compute = Constraints::alignment_constratint;
-        fp.back().cost_arity_mode = PSE_COST_ARITY_MODE_PER_RELATIONSHIP;
+        fp.back().compute = Constraints::alignmentX_constratint;
+        fp.back().cost_arity_mode = PSE_COST_ARITY_MODE_PER_POINT;
+        fp.back().costs_count = 1;
+        fp.back().expected_pspace = r2_uid;
+
+        alignmentY_cosntr_ID = fp.size();
+        fp.push_back( PSE_RELSHP_COST_FUNC_PARAMS_NULL);
+        fids.push_back(PSE_RELSHP_COST_FUNC_ID_INVALID_);
+        fp.back().compute = Constraints::alignmentY_constratint;
+        fp.back().cost_arity_mode = PSE_COST_ARITY_MODE_PER_POINT;
         fp.back().costs_count = 1;
         fp.back().expected_pspace = r2_uid;
     }
@@ -122,17 +132,27 @@ void MyDecalSolver::internal_preupdate_constraintrelationships(size_t nRelshsps,
 
     //alignment constr
     if(switchAlignConstraint){
-        std::vector<pse_cpspace_relshp_params_t> rp1(nRelshsps, PSE_CPSPACE_RELSHP_PARAMS_NULL_) ;
-        std::vector<pse_relshp_id_t> r1ids(nRelshsps, PSE_RELSHP_ID_INVALID_) ;
-        for(size_t i = 0; i < nRelshsps; i++) {
-          rp1[i].ppoints_count = 2;
-          rp1[i].ppoints_id = pppairs[i].data();
-          rp1[i].kind = PSE_RELSHP_KIND_INCLUSIVE;
-          rp1[i].cnstrs.funcs_count = 1;
-          rp1[i].cnstrs.ctxts_config = gamut_config;// name is the same, but it is the state
-          rp1[i].cnstrs.funcs = &fids[alignment_cosntr_ID];
-        }
-        PSE_CALL(pseConstrainedParameterSpaceRelationshipsAdd(cps,alignment_cosntr_ID,nRelshsps,rp1.data(),r1ids.data()));
+        //X Alignment
+        pse_cpspace_relshp_params_t rpAlignX =PSE_CPSPACE_RELSHP_PARAMS_NULL_ ;
+        pse_relshp_id_t ridAlignX = PSE_RELSHP_ID_INVALID_ ;
+        rpAlignX.ppoints_count = 0;
+        rpAlignX.ppoints_id = nullptr;
+        rpAlignX.kind = PSE_RELSHP_KIND_EXCLUSIVE;
+        rpAlignX.cnstrs.funcs_count = 1;
+        rpAlignX.cnstrs.ctxts_config = gamut_config;// name is the same, but it is the state
+        rpAlignX.cnstrs.funcs = &fids[alignmentX_cosntr_ID];
+        PSE_CALL(pseConstrainedParameterSpaceRelationshipsAdd(cps,alignmentX_cosntr_ID,1,&rpAlignX,&ridAlignX));
+
+        //Y Alignment
+        pse_cpspace_relshp_params_t rpAlignY =PSE_CPSPACE_RELSHP_PARAMS_NULL_ ;
+        pse_relshp_id_t ridAlignY = PSE_RELSHP_ID_INVALID_ ;
+        rpAlignY.ppoints_count = 0;
+        rpAlignY.ppoints_id = nullptr;
+        rpAlignY.kind = PSE_RELSHP_KIND_EXCLUSIVE;
+        rpAlignY.cnstrs.funcs_count = 1;
+        rpAlignY.cnstrs.ctxts_config = gamut_config;// name is the same, but it is the state
+        rpAlignY.cnstrs.funcs = &fids[alignmentY_cosntr_ID];
+        PSE_CALL(pseConstrainedParameterSpaceRelationshipsAdd(cps,alignmentY_cosntr_ID,1,&rpAlignY,&ridAlignY));
     }
 }
 
@@ -188,6 +208,7 @@ pse_res_t MyDecalSolver::getAttribs(void *ctxt,
 
             if(QWidgetMyDecale::lockedDecals.at(it->first)== true){//active when pressed by user
                 out[i] = 1 ;
+                pressedDecalId = i;
             }else out[i] = 0;
         }
       } break;

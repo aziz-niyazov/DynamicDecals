@@ -26,6 +26,8 @@ public:
     static bool switchMaxDistConstraint;
     static bool switchAlignConstraint;
 
+    static int pressedDecalId;
+
 //     bool switchGamutConstraint;
 //     bool switchMinDistConstraint;
 //     bool switchMaxDistConstraint;
@@ -57,7 +59,8 @@ protected:
     int gamut_cosntr_ID = -1;
     int min_dist_cosntr_ID = -1;
     int max_dist_cosntr_ID = -1;
-    int alignment_cosntr_ID = -1;
+    int alignmentX_cosntr_ID = -1;
+    int alignmentY_cosntr_ID = -1;
 
 
 };

@@ -4,6 +4,12 @@
 
 int costFactor = 1;
 
+const int gridRows = 2;
+const int gridCols = 3;
+
+
+int MyDecalSolver::pressedDecalId;
+
 Constraints::Constraints()
 {
 
@@ -15,7 +21,10 @@ bool Constraints::isInsideTheImage(int i,int j, int w, int h){
 }
 
 
-pse_res_t Constraints::gamut_constratint(const pse_eval_ctxt_t *, const pse_eval_coordinates_t *eval_coords, pse_eval_relshps_t *eval_relshps, pse_real_t *costs)
+pse_res_t Constraints::gamut_constratint(const pse_eval_ctxt_t *,
+                                         const pse_eval_coordinates_t *eval_coords,
+                                         pse_eval_relshps_t *eval_relshps,
+                                         pse_real_t *costs)
 {
     assert(eval_relshps->count == 1);
     const struct pse_eval_relshp_data_t* data = eval_relshps->data[0];
@@ -144,8 +153,9 @@ pse_res_t Constraints::min_dist_constratint(const pse_eval_ctxt_t *eval_ctxt,
 
 
         costs[i] = costFactor * std::min(0.0, dist-r1-r2);
-    }
 
+    }
+    //qDebug() << "minDist cost id6: " <<costs[6];
 
     return RES_OK;
 
@@ -212,112 +222,207 @@ pse_res_t Constraints::max_dist_constratint(const pse_eval_ctxt_t *eval_ctxt,
 
 
         costs[i] *= costFactor;
+
+    }
+    //qDebug() << "maxDist cost id6: " <<costs[6];
+    return RES_OK;
+}
+pse_res_t Constraints::alignmentX_constratint(const pse_eval_ctxt_t *,
+                                            const pse_eval_coordinates_t *eval_coords,
+                                            pse_eval_relshps_t *eval_relshps,
+                                            pse_real_t *costs){
+    assert(eval_relshps->count == 1);
+    const struct pse_eval_relshp_data_t* data = eval_relshps->data[0];
+
+
+
+    std::vector<int> decalIDsG1 = {0, 1, 2, 3, 4, 5};
+    std::vector<int> decalIDsG2 = {6, 7, 8, 9, 10, 11};
+
+    double f1 = 0.0;
+    double f2 = 0.0;
+
+
+    std::vector<double> meanXposG1(gridCols, 0.0); // 3 cols
+    std::vector<double> meanXposG2(gridCols, 0.0); // 3 cols
+
+
+
+    for(size_t i = 0; i < data->ppoints_count; ++i) {
+        const pse_ppoint_id_t ppidx = data->ppoints[i];
+        const pse_real_t x = eval_coords->coords[i*2+0];
+        //const pse_real_t y = eval_coords->coords[i*2+1];
+        int id = static_cast<int>(ppidx);
+
+        bool isGroup1 = (std::find(decalIDsG1.begin(), decalIDsG1.end(), id) != decalIDsG1.end());
+        bool isGroup2 = (std::find(decalIDsG2.begin(), decalIDsG2.end(), id) != decalIDsG2.end());
+
+        //calculates alignment lines of G1
+        if (isGroup1) {
+           int colIndex = id % gridCols;
+           if (colIndex >= 0 && colIndex < gridCols) {
+               meanXposG1[colIndex] += x;
+           }
+        }else if (isGroup2) {
+           int colIndex = id % gridCols;
+           if (colIndex >= 0 && colIndex < gridCols) {
+               meanXposG2[colIndex] += x;
+           }
+        }
+    }
+
+
+    //calculate average X value for each column
+    for(size_t i = 0; i < meanXposG1.size(); i++){
+        meanXposG1[i] = meanXposG1[i]/gridRows;
+    }
+
+    for(size_t i = 0; i < meanXposG2.size(); i++){
+        meanXposG2[i] = meanXposG2[i]/gridRows;
+    }
+
+
+
+
+    for(size_t i = 0; i < data->ppoints_count; ++i) {
+
+        const pse_ppoint_id_t ppidx = data->ppoints[i];
+        const pse_real_t x = eval_coords->coords[i*2+0];
+       // const pse_real_t y = eval_coords->coords[i*2+1];
+        int id = static_cast<int>(ppidx);
+
+        bool isGroup1 = (std::find(decalIDsG1.begin(), decalIDsG1.end(), id) != decalIDsG1.end());
+        bool isGroup2 = (std::find(decalIDsG2.begin(), decalIDsG2.end(), id) != decalIDsG2.end());
+
+
+        if (isGroup1) {
+            // X-axis alignment for decals 0, 3, 1, 4, 2, 5
+            if (id == 0 || id == 3) {
+                f1 = meanXposG1[0] - x;
+            } else if (id == 1 || id == 4) {
+                f1 = meanXposG1[1] - x;
+            } else if (id == 2 || id == 5) {
+                f1 = meanXposG1[2] - x;
+            }
+            costs[i] =  f1;
+        }else if (isGroup2) {
+            if (id == 6 || id == 9) {
+                f2 = meanXposG2[0] - x;
+            } else if (id == 7 || id == 10) {
+                f2 = meanXposG2[1] - x;
+            } else if (id == 8 || id == 11) {
+                f2 = meanXposG2[2] - x;
+            }
+            costs[i] =  f2;
+
+        }else{
+            costs[i] = 0;
+        }
+
+        costs[i] *= costFactor;
+
     }
 
     return RES_OK;
 }
 
-pse_res_t Constraints::alignment_constratint(const pse_eval_ctxt_t *eval_ctxt,
+pse_res_t Constraints::alignmentY_constratint(const pse_eval_ctxt_t *,
                                             const pse_eval_coordinates_t *eval_coords,
                                             pse_eval_relshps_t *eval_relshps,
                                             pse_real_t *costs){
-    size_t i;
-       (void)eval_ctxt;
+    assert(eval_relshps->count == 1);
+    const struct pse_eval_relshp_data_t* data = eval_relshps->data[0];
 
-       std::vector<int> decalIDsG1 = {0, 1, 2, 3, 4, 5};
-       std::vector<int> decalIDsG2 = {6, 7, 8, 9, 10, 11};
 
-       for (i = 0; i < eval_relshps->count; ++i) {
-           const struct pse_eval_relshp_data_t* data = eval_relshps->data[i];
-           assert(data->ppoints_count == 2);
 
-           const pse_ppoint_id_t ppidx1 = data->ppoints[0];
-           const pse_ppoint_id_t ppidx2 = data->ppoints[1];
+    std::vector<int> decalIDsG1 = {0, 1, 2, 3, 4, 5};
+    std::vector<int> decalIDsG2 = {6, 7, 8, 9, 10, 11};
 
-           double f1 = 0.0;
-           double f2 = 0.0;
+    double f1 = 0.0;
+    double f2 = 0.0;
 
-           int id1 = static_cast<int>(ppidx1);
-           int id2 = static_cast<int>(ppidx2);
 
-           bool isGroup1 = (std::find(decalIDsG1.begin(), decalIDsG1.end(), id1) != decalIDsG1.end() &&
-                            std::find(decalIDsG1.begin(), decalIDsG1.end(), id2) != decalIDsG1.end());
+    std::vector<double> meanYposG1(gridRows, 0.0); // 2 rows
+    std::vector<double> meanYposG2(gridRows, 0.0); // 2 rows
 
-           bool isGroup2 = (std::find(decalIDsG2.begin(), decalIDsG2.end(), id1) != decalIDsG2.end() &&
-                            std::find(decalIDsG2.begin(), decalIDsG2.end(), id2) != decalIDsG2.end());
 
-           if (isGroup1) {
-               // Iterate over groups and check for horizontal alignment within each group.
-               for (int groupId = 0; groupId < 2; ++groupId) {
-                   if (std::find(decalIDsG1.begin() + groupId * 3, decalIDsG1.begin() + (groupId + 1) * 3, id1) !=
-                           decalIDsG1.begin() + (groupId + 1) * 3 &&
-                       std::find(decalIDsG1.begin() + groupId * 3, decalIDsG1.begin() + (groupId + 1) * 3, id2) !=
-                           decalIDsG1.begin() + (groupId + 1) * 3) {
 
-                       const pse_real_t y1 = eval_coords->coords[ppidx1 * 2 + 1];
-                       const pse_real_t y2 = eval_coords->coords[ppidx2 * 2 + 1];
+    for(size_t i = 0; i < data->ppoints_count; ++i) {
+        const pse_ppoint_id_t ppidx = data->ppoints[i];
+       // const pse_real_t x = eval_coords->coords[i*2+0];
+        const pse_real_t y = eval_coords->coords[i*2+1];
+        int id = static_cast<int>(ppidx);
 
-                       // Calculate the vertical difference between elements in the same group.
-                       double diffY = y1 - y2;
+        bool isGroup1 = (std::find(decalIDsG1.begin(), decalIDsG1.end(), id) != decalIDsG1.end());
+        bool isGroup2 = (std::find(decalIDsG2.begin(), decalIDsG2.end(), id) != decalIDsG2.end());
 
-                       // Define the cost based on vertical alignment within the group.
-                       f1 = std::abs(diffY);
-                       break; // Break the loop if alignment is found in a group.
-                   }
-               }
-               if (f1 == 0.0 &&
-                   ((ppidx1 == 0 && ppidx2 == 3) || (ppidx1 == 1 && ppidx2 == 4) || (ppidx1 == 2 && ppidx2 == 5) ||
-                    (ppidx2 == 0 && ppidx1 == 3) || (ppidx2 == 1 && ppidx1 == 4) || (ppidx2 == 2 && ppidx1 == 5))) {
+        //calculates 2 alignment lines of G1
+        if (isGroup1) {
+            // Calculate the row index based on the ID
+           int rowIndex = id / gridCols; // Assuming gridCols elements per row
 
-                   const pse_real_t x1 = eval_coords->coords[ppidx1 * 2 + 0];
-                   const pse_real_t x2 = eval_coords->coords[ppidx2 * 2 + 0];
-
-                   // Calculate the horizontal difference between vertically aligned elements.
-                   double diffX = x1 - x2;
-
-                   // Define the cost based on horizontal alignment between groups.
-                   f1 = std::abs(diffX);
-               }
-           } else if (isGroup2) {
-               // Iterate over groups and check for horizontal alignment within each group.
-               for (int groupId = 0; groupId < 2; ++groupId) {
-                   if (std::find(decalIDsG2.begin() + groupId * 3, decalIDsG2.begin() + (groupId + 1) * 3, id1) !=
-                           decalIDsG2.begin() + (groupId + 1) * 3 &&
-                       std::find(decalIDsG2.begin() + groupId * 3, decalIDsG2.begin() + (groupId + 1) * 3, id2) !=
-                           decalIDsG2.begin() + (groupId + 1) * 3) {
-
-                       const pse_real_t y1 = eval_coords->coords[ppidx1 * 2 + 1];
-                       const pse_real_t y2 = eval_coords->coords[ppidx2 * 2 + 1];
-
-                       // Calculate the vertical difference between elements in the same group.
-                       double diffY = y1 - y2;
-
-                       // Define the cost based on vertical alignment within the group.
-                       f2 = std::abs(diffY);
-                       break; // Break the loop if alignment is found in a group.
-                   }
-               }
-               if (f2 == 0.0 &&
-                   ((ppidx1 == 6 && ppidx2 == 9) || (ppidx1 == 7 && ppidx2 == 10) || (ppidx1 == 8 && ppidx2 == 11) ||
-                    (ppidx2 == 6 && ppidx1 == 9) || (ppidx2 == 7 && ppidx1 == 10) || (ppidx2 == 8 && ppidx1 == 11))) {
-
-                   const pse_real_t x1 = eval_coords->coords[ppidx1 * 2 + 0];
-                   const pse_real_t x2 = eval_coords->coords[ppidx2 * 2 + 0];
-
-                   // Calculate the horizontal difference between vertically aligned elements.
-                   double diffX = x1 - x2;
-
-                   // Define the cost based on horizontal alignment between groups.
-                   f2 = std::abs(diffX);
-               }
+           // Update the meanXposG1 for the corresponding row
+           if (rowIndex >= 0 && rowIndex < gridRows) {
+               meanYposG1[rowIndex] += y;
            }
+        }else if(isGroup2){
+           int rowIndex = (id-decalIDsG1.size()) / gridCols; //to have rowIndex from 0 and 1 (only 2 rows)
 
-           // Assign the alignment cost to the corresponding element based on the group.
-           costs[i] = (isGroup1 ? f1 : isGroup2 ? f2 : 0.0) * costFactor;
-       }
+           if (rowIndex >= 0 && rowIndex < gridRows) {
+               meanYposG2[rowIndex] += y;
+           }
+        }
+    }
 
-       return RES_OK;
+
+
+    for(size_t i = 0; i < meanYposG1.size(); i++){
+        meanYposG1[i] = meanYposG1[i]/gridCols;
+    }
+    for(size_t i = 0; i < meanYposG2.size(); i++){
+        meanYposG2[i] = meanYposG2[i]/gridCols;
+    }
+
+
+    for(size_t i = 0; i < data->ppoints_count; ++i) {
+
+        const pse_ppoint_id_t ppidx = data->ppoints[i];
+        //const pse_real_t x = eval_coords->coords[i*2+0];
+        const pse_real_t y = eval_coords->coords[i*2+1];
+        int id = static_cast<int>(ppidx);
+
+        bool isGroup1 = (std::find(decalIDsG1.begin(), decalIDsG1.end(), id) != decalIDsG1.end());
+        bool isGroup2 = (std::find(decalIDsG2.begin(), decalIDsG2.end(), id) != decalIDsG2.end());
+
+
+        if (isGroup1) {
+            // Y-axis alignment for decals 0, 1, 2 and 3, 4, 5
+            if (id >= 0 && id <= 2) {
+                f1 = meanYposG1[0] - y;
+            } else if (id >= 3 && id <= 5) {
+                f1 = meanYposG1[1] - y;
+            }
+            costs[i] = f1;
+        }else if(isGroup2){
+            if (id >= 6 && id <= 8) {
+                f2 = meanYposG2[0] - y;
+            }
+            else if (id >= 9 && id <= 11) {
+                f2 = meanYposG2[1] - y;
+            }
+            costs[i] = f2;
+        }else{
+            costs[i] = 0;
+        }
+        costs[i] *= costFactor;
+
+    }
+
+    return RES_OK;
 }
+
+
+
 
 
 
